@@ -1,0 +1,5 @@
+add_executable(leveldb_benchmark leveldb_benchmark.cpp)
+add_executable(diskv_bplustree_benchmark diskv_bplustree_benchmark.cpp)
+
+target_link_libraries(leveldb_benchmark diskv)
+target_link_libraries(diskv_bplustree_benchmark diskv)
