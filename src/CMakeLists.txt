@@ -12,6 +12,7 @@ set(DISKV_LIBS
 
 set(DISKV_THIRD_PARTY_LIBS
     leveldb
+    murmur3
 )
 
 target_link_libraries(diskv ${DISKV_LIBS} ${DISKV_THIRD_PARTY_LIBS})
