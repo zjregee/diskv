@@ -1,6 +1,7 @@
 add_subdirectory(common)
 add_subdirectory(leveldb)
 add_subdirectory(bplustree)
+add_subdirectory(hashtable)
 
 add_library(diskv STATIC ${ALL_OBJECT_FILES})
 
@@ -8,6 +9,7 @@ set(DISKV_LIBS
     diskv_common
     diskv_leveldb
     diskv_bplustree
+    diskv_hashtable
 )
 
 set(DISKV_THIRD_PARTY_LIBS
