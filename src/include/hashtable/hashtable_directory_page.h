@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "hashtable/hashtable_page.h"
 
 namespace diskv {

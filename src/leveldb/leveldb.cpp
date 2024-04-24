@@ -18,6 +18,7 @@ LevelDB::~LevelDB() {
 
 bool LevelDB::Insert(const std::string &key, const std::string &value) {
     leveldb::WriteOptions write_options;
+    write_options.sync = true;
     leveldb::Status status = db_->Put(write_options, key, value);
     return status.ok();
 }

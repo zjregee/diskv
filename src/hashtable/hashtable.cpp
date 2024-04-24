@@ -1,1 +1,110 @@
 #include "hashtable/hashtable.h"
+
+namespace diskv {
+
+auto Hash(const BUCKET_PAGE_KEY_TYPE &key) -> size_t {
+    return murmur3::MurmurHash3_x64_128(reinterpret_cast<const void *>(key.data_), 32, 0);
+}
+
+auto GetHighBit(int index)-> int {
+    return 1 << static_cast<int>(log2(index));
+}
+
+auto HashTable::GetBucketNum() -> int {
+    size_t global_depth = directory_region_->GetGlobalDepth();
+    return static_cast<int>(pow(2, global_depth));
+}
+
+auto HashTable::IndexOf(size_t hash)-> int {
+    size_t global_depth = directory_region_->GetGlobalDepth();
+    int mask = (1 << global_depth) - 1;
+    return hash & mask;
+}
+
+auto HashTable::RawIndexOf(size_t hash, int index) -> int {
+    size_t local_depth = directory_region_->GetBucketLocalDepth(index);
+    int mask = (1 << local_depth) - 1;
+    return hash & mask;
+}
+
+auto HashTable::Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_TYPE &value) -> bool {
+    size_t hash = Hash(key);
+    int index = IndexOf(hash);
+    int raw_index = RawIndexOf(hash, index);
+    auto *raw_page = disk_manager_->FetchPage(directory_region_size_ + raw_index);
+    auto *page = reinterpret_cast<HashTableBucketPage *>(raw_page->GetData());
+    if (BUCKET_PAGE_SIZE > page->GetSize()) {
+        page->SetKeyAt(page->GetSize(), key);
+        page->SetValueAt(page->GetSize(), value);
+        page->SetSize(page->GetSize() + 1);
+        disk_manager_->UnpinPage(directory_region_size_ + raw_index, raw_page, true);
+        return true;
+    }
+    size_t local_depth = directory_region_->GetBucketLocalDepth(raw_index);
+    if (local_depth == directory_region_->GetGlobalDepth()) {
+        int origin_size = GetBucketNum();
+        directory_region_->SetGlobalDepth(directory_region_->GetGlobalDepth() + 1);
+        for (int i = origin_size; i < GetBucketNum(); i++) {
+            int j = i - GetHighBit(i);
+            directory_region_->SetBucketLocalDepth(i, directory_region_->GetBucketLocalDepth(j));
+        }
+    }
+    local_depth += 1;
+    int mask = 1 << (local_depth - 1);
+    int split_index = raw_index | mask;
+    auto *raw_split_page = disk_manager_->FetchPage(directory_region_size_ + split_index);
+    auto *split_page = reinterpret_cast<HashTableBucketPage *>(raw_page->GetData());
+    std::vector<BUCKET_PAGE_MAPPING_TYPE> split_array;
+    int target_mask = (1 << local_depth) - 1;
+    int target_index = split_index;
+    auto condition = [&](const BUCKET_PAGE_MAPPING_TYPE& entry) {
+        size_t hash = Hash(entry.first);
+        int index = hash & target_mask;
+        return index == target_index;
+    };
+    page->RemoveAndSave(condition, split_array);
+    split_page->SetSize(split_array.size());
+    for (int i = 0; i < split_array.size(); i++) {
+        split_page->SetKeyAt(i, split_array[i].first);
+        split_page->SetValueAt(i, split_array[i].second);
+    }
+    int key_index = hash & target_mask;
+    if (key_index == raw_index) {
+        page->SetKeyAt(page->GetSize(), key);
+        page->SetValueAt(page->GetSize(), value);
+        page->SetSize(page->GetSize() + 1);
+    } else {
+        split_page->SetKeyAt(split_page->GetSize(), key);
+        split_page->SetValueAt(split_page->GetSize(), value);
+        split_page->SetSize(split_page->GetSize() + 1);
+    }
+    int diff = 1 << local_depth;
+    for (int i = raw_index; i < GetBucketNum(); i += diff) {
+        directory_region_->SetBucketLocalDepth(i, local_depth);
+    }
+    for (int i = split_index; i < GetBucketNum(); i += diff) {
+        directory_region_->SetBucketLocalDepth(i, local_depth);
+    }
+    disk_manager_->UnpinPage(directory_region_size_ + raw_index, raw_page, true);
+    disk_manager_->UnpinPage(directory_region_size_ + split_index, raw_split_page, true);
+    return true;
+}
+
+auto HashTable::GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE *value) -> bool {
+    size_t hash = Hash(key);
+    int index = IndexOf(hash);
+    int raw_index = RawIndexOf(hash, index);
+    auto *raw_page = disk_manager_->FetchPage(directory_region_size_ + raw_index);
+    auto *page = reinterpret_cast<HashTableBucketPage *>(raw_page->GetData());
+    for (int i = 0; i < page->GetSize(); i++) {
+        if (comparator_(key, page->KeyAt(i)) == 0) {
+            *value = page->ValueAt(i);
+            disk_manager_->UnpinPage(directory_region_size_ + raw_index, raw_page, false);
+            return true;
+        }
+    }
+    disk_manager_->UnpinPage(directory_region_size_ + raw_index, raw_page, false);
+    return false;
+}
+
+}
