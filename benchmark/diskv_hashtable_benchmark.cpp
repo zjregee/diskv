@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
     int data_num = std::atoi(argv[1]);
     std::string disk_name = argv[2];
 
-    std::vector<std::pair<std::string, std::string>> data = generate_random_data(data_num, 32, 32);
+    std::vector<std::pair<std::string, std::string>> data = generate_random_data(data_num, 32, 172);
 
     diskv::DiskManager *disk = new diskv::DiskManager(disk_name);
-    diskv::HashTable *index = new diskv::HashTable(disk, 18);
+    diskv::HashTable *index = new diskv::HashTable(disk, 20);
 
     {
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
             diskv::BUCKET_PAGE_KEY_TYPE key = diskv::BUCKET_PAGE_KEY_TYPE();
             diskv::BUCKET_PAGE_VALUE_TYPE value = diskv::BUCKET_PAGE_VALUE_TYPE();
             std::memcpy(key.data_, data[i].first.c_str(), 32);
-            std::memcpy(value.data_, data[i].second.c_str(), 32);
+            std::memcpy(value.data_, data[i].second.c_str(), 172);
             if (!index->Insert(key, value)) {
                 std::cout << "HashTable execute " << i << "th insert error: can' insert key" << std::endl;
             }
@@ -82,14 +82,14 @@ int main(int argc, char* argv[]) {
             diskv::BUCKET_PAGE_KEY_TYPE key = diskv::BUCKET_PAGE_KEY_TYPE();
             diskv::BUCKET_PAGE_VALUE_TYPE res_value = diskv::BUCKET_PAGE_VALUE_TYPE();
             std::memcpy(key.data_, data[i].first.c_str(), 32);
-            std::memcpy(res_value.data_, data[i].second.c_str(), 32);
+            std::memcpy(res_value.data_, data[i].second.c_str(), 172);
             diskv::BUCKET_PAGE_VALUE_TYPE value;
             if (!index->GetValue(key, &value)) {
                 std::cout << "HashTable execute " << i << "th queury error: can' find key" << std::endl;
                 break;
             }
-            if (memcmp(value.data_, res_value.data_, 32) != 0) {
-                std::cout << "HashTable execute " << i << "th queury error: correct value - " << std::string(res_value.data_, 32) << " get value - " << std::string(value.data_, 32) << std::endl;
+            if (memcmp(value.data_, res_value.data_, 172) != 0) {
+                std::cout << "HashTable execute " << i << "th queury error: correct value - " << std::string(res_value.data_, 172) << " get value - " << std::string(value.data_, 172) << std::endl;
                 break;
             }
         }
@@ -100,7 +100,6 @@ int main(int argc, char* argv[]) {
     }
 
     index->PrintDiskUsage();
-    // index->PrintInternal();
 
     return 0;
 }

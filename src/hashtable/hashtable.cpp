@@ -130,7 +130,7 @@ void HashTable::PrintInternal() {
         std::cout << "bucket " << i << ": size - " << page->GetSize() << std::endl;
         std::cout << "bucket " << i << ": local_depth - " << directory_region_->GetBucketLocalDepth(i) << std::endl;
         for (int j = 0; j < page->GetSize(); j++) {
-            std::cout << "bucket " << i << ": key - " << std::string(page->KeyAt(j).data_, 32) << " value - " << std::string(page->ValueAt(j).data_, 32) << std::endl;
+            std::cout << "bucket " << i << ": key - " << std::string(page->KeyAt(j).data_, 32) << " value - " << std::string(page->ValueAt(j).data_, 172) << std::endl;
         }
         disk_manager_->UnpinPage(directory_region_size_ + i, raw_page, false);
     }
