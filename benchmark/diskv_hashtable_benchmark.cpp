@@ -56,7 +56,8 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::pair<std::string, std::string>> data = generate_random_data(data_num, key_size, value_size);
 
-    diskv::HashTable *index = new diskv::HashTable();
+    diskv::DiskManager *disk = new diskv::DiskManager(disk_name);
+    diskv::HashTable *index = new diskv::HashTable(disk, 25);
 
     {
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -99,6 +100,8 @@ int main(int argc, char* argv[]) {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         std::cout << "HashTable query duration: " << duration.count() << "ms" << std::endl;
     }
+
+    index->PrintDiskUsage();
 
     return 0;
 }

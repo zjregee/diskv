@@ -7,6 +7,7 @@ namespace diskv {
 
 class HashTableDirectoryRegion {
 public:
+    explicit HashTableDirectoryRegion(DiskManager *disk_manager);
     auto GetGlobalDepth() -> size_t;
     void SetGlobalDepth(size_t global_depth);
     auto GetBucketLocalDepth(int index) -> size_t;

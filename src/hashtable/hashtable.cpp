@@ -27,6 +27,22 @@ auto HashTable::RawIndexOf(size_t hash, int index) -> int {
     return hash & mask;
 }
 
+HashTable::HashTable(DiskManager *disk_manager, int max_depth) {
+    bucket_region_size_ = static_cast<int>(pow(2, max_depth));
+    directory_region_size_ = (bucket_region_size_ - 1) / DIRECTORY_PAGE_SIZE + 1;
+    disk_manager_ = disk_manager;
+    comparator_ = BUCKET_PAGE_KEY_COMPARATOR();
+    directory_region_ = new HashTableDirectoryRegion(disk_manager);
+}
+
+void HashTable::InitDisk() {
+    for (int i = 0; i < directory_region_size_ + bucket_region_size_; i++) {
+        size_t page_id;
+        Page *page = disk_manager_->NewPage(&page_id);
+        disk_manager_->UnpinPage(page_id, page, false);
+    }
+}
+
 auto HashTable::Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_TYPE &value) -> bool {
     size_t hash = Hash(key);
     int index = IndexOf(hash);
@@ -105,6 +121,11 @@ auto HashTable::GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE
     }
     disk_manager_->UnpinPage(directory_region_size_ + raw_index, raw_page, false);
     return false;
+}
+
+void HashTable::PrintDiskUsage() {
+    std::cout << "HashTable disk usage: " << (directory_region_size_ + bucket_region_size_) * 4096 / 1024 / 1024 << "MB" << std::endl;
+    std::cout << "HashTable bucket usage: total bucket num - " << bucket_region_size_ << " used bucket num - " << GetBucketNum() << std::endl;
 }
 
 }

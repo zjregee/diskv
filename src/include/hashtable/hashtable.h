@@ -11,11 +11,15 @@ namespace diskv {
 
 class HashTable {
 public:
+    HashTable(DiskManager *disk_manager, int max_depth);
+    void InitDisk();
     auto Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_TYPE &value) -> bool;
     auto GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE *value) -> bool;
+    void PrintDiskUsage();
 
 private:
     DiskManager *disk_manager_;
+    size_t bucket_region_size_;
     size_t directory_region_size_;
     BUCKET_PAGE_KEY_COMPARATOR comparator_;
     HashTableDirectoryRegion *directory_region_;

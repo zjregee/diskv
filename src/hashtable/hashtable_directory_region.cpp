@@ -2,6 +2,10 @@
 
 namespace diskv {
 
+HashTableDirectoryRegion::HashTableDirectoryRegion(DiskManager *disk_manager) {
+    disk_manager_ = disk_manager;
+}
+
 auto HashTableDirectoryRegion::GetGlobalDepth() -> size_t {
     auto *raw_page = disk_manager_->FetchPage(0);
     auto *page = reinterpret_cast<HashTableDirectoryPage *>(raw_page->GetData());
