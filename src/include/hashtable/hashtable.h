@@ -12,10 +12,10 @@ namespace diskv {
 class HashTable {
 public:
     HashTable(DiskManager *disk_manager, int max_depth);
-    void InitDisk();
     auto Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_TYPE &value) -> bool;
     auto GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE *value) -> bool;
     void PrintDiskUsage();
+    void PrintInternal();
 
 private:
     DiskManager *disk_manager_;

@@ -35,14 +35,6 @@ HashTable::HashTable(DiskManager *disk_manager, int max_depth) {
     directory_region_ = new HashTableDirectoryRegion(disk_manager);
 }
 
-void HashTable::InitDisk() {
-    for (int i = 0; i < directory_region_size_ + bucket_region_size_; i++) {
-        size_t page_id;
-        Page *page = disk_manager_->NewPage(&page_id);
-        disk_manager_->UnpinPage(page_id, page, false);
-    }
-}
-
 auto HashTable::Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_TYPE &value) -> bool {
     size_t hash = Hash(key);
     int index = IndexOf(hash);
@@ -69,7 +61,7 @@ auto HashTable::Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_
     int mask = 1 << (local_depth - 1);
     int split_index = raw_index | mask;
     auto *raw_split_page = disk_manager_->FetchPage(directory_region_size_ + split_index);
-    auto *split_page = reinterpret_cast<HashTableBucketPage *>(raw_page->GetData());
+    auto *split_page = reinterpret_cast<HashTableBucketPage *>(raw_split_page->GetData());
     std::vector<BUCKET_PAGE_MAPPING_TYPE> split_array;
     int target_mask = (1 << local_depth) - 1;
     int target_index = split_index;
@@ -126,6 +118,22 @@ auto HashTable::GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE
 void HashTable::PrintDiskUsage() {
     std::cout << "HashTable disk usage: " << (directory_region_size_ + bucket_region_size_) * 4096 / 1024 / 1024 << "MB" << std::endl;
     std::cout << "HashTable bucket usage: total bucket num - " << bucket_region_size_ << " used bucket num - " << GetBucketNum() << std::endl;
+}
+
+void HashTable::PrintInternal() {
+    std::cout << "[directory region]" << std::endl;
+    std::cout << "global_depth: " << directory_region_->GetGlobalDepth() << std::endl;
+    std::cout << "[bucket region]" << std::endl;
+    for (int i = 0; i < GetBucketNum(); i++) {
+        auto *raw_page = disk_manager_->FetchPage(directory_region_size_ + i);
+        auto *page = reinterpret_cast<HashTableBucketPage *>(raw_page->GetData());
+        std::cout << "bucket " << i << ": size - " << page->GetSize() << std::endl;
+        std::cout << "bucket " << i << ": local_depth - " << directory_region_->GetBucketLocalDepth(i) << std::endl;
+        for (int j = 0; j < page->GetSize(); j++) {
+            std::cout << "bucket " << i << ": key - " << std::string(page->KeyAt(j).data_, 32) << " value - " << std::string(page->ValueAt(j).data_, 32) << std::endl;
+        }
+        disk_manager_->UnpinPage(directory_region_size_ + i, raw_page, false);
+    }
 }
 
 }
