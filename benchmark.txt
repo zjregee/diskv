@@ -1,0 +1,11 @@
+LevelDB insert duration: 4027ms
+LevelDB query duration: 2408ms
+LevelDB remove duration: 1164ms
+
+HashTable insert duration: 3127ms
+HashTable query duration: 1759ms
+HashTable remove duration: 233ms
+
+HashTable insert duration: 3651ms
+HashTable query duration: 1500ms
+HashTable remove duration: 272ms

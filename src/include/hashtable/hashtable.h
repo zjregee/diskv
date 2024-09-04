@@ -14,6 +14,7 @@ public:
     HashTable(DiskManager *disk_manager, int max_depth);
     auto Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_TYPE &value) -> bool;
     auto GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE *value) -> bool;
+    auto Remove(const BUCKET_PAGE_KEY_TYPE &key) -> bool;
     void PrintDiskUsage();
     void PrintInternal();
 

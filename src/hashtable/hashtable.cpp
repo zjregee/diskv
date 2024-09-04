@@ -115,6 +115,20 @@ auto HashTable::GetValue(const BUCKET_PAGE_KEY_TYPE &key, BUCKET_PAGE_VALUE_TYPE
     return false;
 }
 
+auto HashTable::Remove(const BUCKET_PAGE_KEY_TYPE &key) -> bool {
+    size_t hash = Hash(key);
+    int index = IndexOf(hash);
+    int raw_index = RawIndexOf(hash, index);
+    auto *raw_page = disk_manager_->FetchPage(directory_region_size_ + raw_index);
+    auto *page = reinterpret_cast<HashTableBucketPage *>(raw_page->GetData());
+    auto condition = [&](const BUCKET_PAGE_MAPPING_TYPE& entry) {
+        return comparator_(key, entry.first) == 0;
+    };
+    bool removed = page->Remove(condition);
+    disk_manager_->UnpinPage(directory_region_size_ + raw_index, raw_page, true);
+    return removed;
+}
+
 void HashTable::PrintDiskUsage() {
     std::cout << "HashTable disk usage: " << (directory_region_size_ + bucket_region_size_) * 4096 / 1024 / 1024 << "MB" << std::endl;
     std::cout << "HashTable bucket usage: total bucket num - " << bucket_region_size_ << " used bucket num - " << GetBucketNum() << std::endl;

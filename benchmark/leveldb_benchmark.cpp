@@ -79,17 +79,38 @@ int main(int argc, char* argv[]) {
             std::string value;
             if (!index->GetValue(data[i].first, value)) {
                 std::cout << "LevelDB execute " << i << "th queury error: can' find key" << std::endl;
-                break;
             }
             if (value != data[i].second) {
                 std::cout << "LevelDB execute " << i << "th queury error: correct value - " <<  data[i].second << " get value - " << value << std::endl;
-                break;
             }
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         std::cout << "LevelDB query duration: " << duration.count() << "ms" << std::endl;
+    }
+
+    {
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        for (size_t i = 0; i < data_num; i++) {
+            if (!index->Remove(data[i].first)) {
+                std::cout << "LevelDB execute " << i << "th remove error: can' remove key" << std::endl;
+            }
+        }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        std::cout << "LevelDB remove duration: " << duration.count() << "ms" << std::endl;
+    }
+
+    {
+        for (size_t i = 0; i < data_num; i++) {
+            std::string value;
+            if (index->GetValue(data[i].first, value)) {
+                std::cout << "LevelDB execute " << i << "th queury error: can' remove key" << std::endl;
+            }
+        }
     }
 
     return 0;

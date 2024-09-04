@@ -18,6 +18,7 @@ LevelDB::~LevelDB() {
 
 bool LevelDB::Insert(const std::string &key, const std::string &value) {
     leveldb::WriteOptions write_options;
+    write_options.sync = false;
     leveldb::Status status = db_->Put(write_options, key, value);
     return status.ok();
 }
@@ -30,7 +31,7 @@ bool LevelDB::GetValue(const std::string &key, std::string &value) {
 
 bool LevelDB::Remove(const std::string &key) {
     leveldb::WriteOptions write_options;
-    write_options.sync = true;
+    write_options.sync = false;
     leveldb::Status status = db_->Delete(write_options, key);
     return status.ok();
 }

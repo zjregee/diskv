@@ -20,6 +20,7 @@ public:
     void SetKeyAt(int index, const BUCKET_PAGE_KEY_TYPE &key);
     auto ValueAt(int index) const -> BUCKET_PAGE_VALUE_TYPE;
     void SetValueAt(int index, const BUCKET_PAGE_VALUE_TYPE &value);
+    auto Remove(std::function<bool(const BUCKET_PAGE_MAPPING_TYPE &)> condition) -> bool;
     void RemoveAndSave(std::function<bool(const BUCKET_PAGE_MAPPING_TYPE &)> condition, std::vector<BUCKET_PAGE_MAPPING_TYPE> &removed_array);
 
 private:

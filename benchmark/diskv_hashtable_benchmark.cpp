@@ -86,17 +86,44 @@ int main(int argc, char* argv[]) {
             diskv::BUCKET_PAGE_VALUE_TYPE value;
             if (!index->GetValue(key, &value)) {
                 std::cout << "HashTable execute " << i << "th queury error: can' find key" << std::endl;
-                break;
             }
             if (memcmp(value.data_, res_value.data_, 172) != 0) {
                 std::cout << "HashTable execute " << i << "th queury error: correct value - " << std::string(res_value.data_, 172) << " get value - " << std::string(value.data_, 172) << std::endl;
-                break;
             }
         }
 
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         std::cout << "HashTable query duration: " << duration.count() << "ms" << std::endl;
+    }
+
+    {
+        auto start_time = std::chrono::high_resolution_clock::now();
+
+        for (int i = 0; i < data_num; i++) {
+            diskv::BUCKET_PAGE_KEY_TYPE key = diskv::BUCKET_PAGE_KEY_TYPE();
+            std::memcpy(key.data_, data[i].first.c_str(), 32);
+            if (!index->Remove(key)) {
+                std::cout << "HashTable execute " << i << "th remove error: can' remove key" << std::endl;
+            }
+        }
+
+        auto end_time = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        std::cout << "HashTable remove duration: " << duration.count() << "ms" << std::endl;
+    }
+
+    {
+        for (int i = 0; i < data_num; i++) {
+            diskv::BUCKET_PAGE_KEY_TYPE key = diskv::BUCKET_PAGE_KEY_TYPE();
+            diskv::BUCKET_PAGE_VALUE_TYPE res_value = diskv::BUCKET_PAGE_VALUE_TYPE();
+            std::memcpy(key.data_, data[i].first.c_str(), 32);
+            std::memcpy(res_value.data_, data[i].second.c_str(), 172);
+            diskv::BUCKET_PAGE_VALUE_TYPE value;
+            if (index->GetValue(key, &value)) {
+                std::cout << "HashTable execute " << i << "th remove error: can' remove key" << std::endl;
+            }
+        }
     }
 
     index->PrintDiskUsage();
