@@ -2,6 +2,8 @@
 
 #include <cstring>
 
+#include "common/config.h"
+
 namespace diskv {
 
 class Page {

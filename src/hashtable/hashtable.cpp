@@ -3,7 +3,7 @@
 namespace diskv {
 
 auto Hash(const BUCKET_PAGE_KEY_TYPE &key) -> size_t {
-    return murmur3::MurmurHash3_x64_128(reinterpret_cast<const void *>(key.data_), 32, 0);
+    return murmur3::MurmurHash3_x64_128(reinterpret_cast<const void *>(key.data_), KEY_SIZE, 0);
 }
 
 auto GetHighBit(int index)-> int {
@@ -71,6 +71,10 @@ auto HashTable::Insert(const BUCKET_PAGE_KEY_TYPE &key, const BUCKET_PAGE_VALUE_
         return index == target_index;
     };
     page->RemoveAndSave(condition, split_array);
+    if (split_array.empty()) {
+        perror("split array is empty, not expected behavior");
+        exit(1);
+    }
     split_page->SetSize(split_array.size());
     for (int i = 0; i < split_array.size(); i++) {
         split_page->SetKeyAt(i, split_array[i].first);
@@ -130,7 +134,7 @@ auto HashTable::Remove(const BUCKET_PAGE_KEY_TYPE &key) -> bool {
 }
 
 void HashTable::PrintDiskUsage() {
-    std::cout << "HashTable disk usage: " << (directory_region_size_ + bucket_region_size_) * 4096 / 1024 / 1024 << "MB" << std::endl;
+    std::cout << "HashTable disk usage: " << (directory_region_size_ + bucket_region_size_) * PAGE_SIZE / 1024 / 1024 << "MB" << std::endl;
     std::cout << "HashTable bucket usage: total bucket num - " << bucket_region_size_ << " used bucket num - " << GetBucketNum() << std::endl;
 }
 
@@ -144,7 +148,7 @@ void HashTable::PrintInternal() {
         std::cout << "bucket " << i << ": size - " << page->GetSize() << std::endl;
         std::cout << "bucket " << i << ": local_depth - " << directory_region_->GetBucketLocalDepth(i) << std::endl;
         for (int j = 0; j < page->GetSize(); j++) {
-            std::cout << "bucket " << i << ": key - " << std::string(page->KeyAt(j).data_, 32) << " value - " << std::string(page->ValueAt(j).data_, 172) << std::endl;
+            std::cout << "bucket " << i << ": key - " << std::string(page->KeyAt(j).data_, KEY_SIZE) << " value - " << std::string(page->ValueAt(j).data_, VALUE_SIZE) << std::endl;
         }
         disk_manager_->UnpinPage(directory_region_size_ + i, raw_page, false);
     }

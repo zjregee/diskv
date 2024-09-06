@@ -29,12 +29,12 @@ auto DiskManager::GetNextPageId() const -> int {
 auto DiskManager::FetchPage(size_t page_id) -> Page * {
     Page *page = AcquirePage();
     page->ResetMemory();
-    off_t off = page_id * 4096;
+    off_t off = page_id * PAGE_SIZE;
     if (lseek(disk_fd_, off, SEEK_SET) == -1) {
         std::cout << "DiskManager internal error" << std::endl;
         exit(1);
     }
-    if (read(disk_fd_, page->GetData(), 4096) == -1) {
+    if (read(disk_fd_, page->GetData(), PAGE_SIZE) == -1) {
         std::cout << "DiskManager internal error" << std::endl;
         exit(1);
     }
@@ -43,12 +43,12 @@ auto DiskManager::FetchPage(size_t page_id) -> Page * {
 
 void DiskManager::UnpinPage(size_t page_id, Page *page, bool is_dirty) {
     if (is_dirty) {
-        off_t off = page_id * 4096;
+        off_t off = page_id * PAGE_SIZE;
         if (lseek(disk_fd_, off, SEEK_SET) == -1) {
             std::cout << "DiskManager internal error" << std::endl;
             exit(1);
         }
-        if (write(disk_fd_, page->GetData(), 4096) == -1) {
+        if (write(disk_fd_, page->GetData(), PAGE_SIZE) == -1) {
             std::cout << "DiskManager internal error" << std::endl;
             exit(1);
         }
@@ -61,12 +61,12 @@ auto DiskManager::NewPage(size_t *page_id) -> Page * {
     next_page_id_++;
     Page *page = AcquirePage();
     page->ResetMemory();
-    off_t off = *page_id * 4096;
+    off_t off = *page_id * PAGE_SIZE;
     if (lseek(disk_fd_, off, SEEK_SET) == -1) {
         std::cout << "DiskManager internal error" << std::endl;
         exit(1);
     }
-    if (write(disk_fd_, page->GetData(), 4096) == -1) {
+    if (write(disk_fd_, page->GetData(), PAGE_SIZE) == -1) {
         std::cout << "DiskManager internal error" << std::endl;
         exit(1);
     }

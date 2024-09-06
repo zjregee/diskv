@@ -3,7 +3,7 @@
 namespace diskv {
 
 Page::Page() {
-    data_ = new char[4096];
+    data_ = new char[PAGE_SIZE];
 }
 
 Page::~Page() {
@@ -15,7 +15,7 @@ auto Page::GetData() -> char* {
 }
 
 void Page::ResetMemory() {
-    memset(data_, 0, 4096);
+    memset(data_, 0, PAGE_SIZE);
 }
 
 }

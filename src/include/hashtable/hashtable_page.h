@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/config.h"
 #include "common/common.h"
 
 namespace diskv {
